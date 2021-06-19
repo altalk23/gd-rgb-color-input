@@ -1,6 +1,6 @@
 #customizable-kind of
 CXX=g++
-OUTPUT=dist/main.dylib
+OUTPUT=dist/rgbcolorinput.dylib
 SDK_LOCATION=/Users/student/Desktop/Storage/SDK/MacOSX10.7.sdk/
 # no touch
 
