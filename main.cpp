@@ -135,7 +135,6 @@ class RGBColorInputWidget : public CCLayer, public TextInputDelegate {
     bool ignore = false; // lmao this is such a hacky fix
 
     virtual void textChanged(CCTextInputNode* input) {
-        // std::cout << "input: " << &input << std::endl;
         if (ignore) return;
         if (input == hexInput) {
             std::string value(input->getString());
@@ -173,7 +172,6 @@ class RGBColorInputWidget : public CCLayer, public TextInputDelegate {
                 color.g = num;
             else if (input == blueInput)
                 color.b = num;
-            // std::cout << (int)color.r << " " << (int)color.g << " " << (int)color.b << "\n";
             ignore = true;
             setPickerColor(color);
             ignore = false;
@@ -191,9 +189,6 @@ public:
             hexInput->setString(colorToHex(color).c_str());
         }
         if (rgb) {
-            std::cout << (int)color.r << " " << (int)color.g << " " << (int)color.b << "\n";
-            // std::cout << color.r << " " << color.g << " " << color.b << "\n";
-            // std::cout << to_string(color.r) << " " << to_string(color.g) << " " << to_string(color.b) << "\n";
             redInput->setString(to_string((int)(color.r)));
             greenInput->setString(to_string((int)(color.g)));
             blueInput->setString(to_string((int)(color.b)));
@@ -257,8 +252,49 @@ class: public $ColorSelectPopup {
         $ColorSelectPopup::dtor();
     }
 } ColorSelectHook;
-END_CAC_HOOKS
 
-void inject() {
-	//do some setup stuff
-}
+class: public $SetupPulsePopup {
+    bool init(EffectGameObject *p0, CCArray *p1) override {
+        // std::cout << "SetupPulsePopup::init\n";
+        // std::cout << cac_this << std::endl;
+
+        if (!$SetupPulsePopup::init(p0, p1)) return false;
+
+        auto layer = cac_this->m_mainLayer;
+        auto widget = RGBColorInputWidget::create(reinterpret_cast<ColorSelectPopup*>(cac_this));
+
+        colorInputWidget = widget;
+        auto center = WINSIZE / 2.f;
+
+        cac_this->_colorPicker()->setPositionX(cac_this->_colorPicker()->getPositionX() + 3.7f);
+        widget->setPosition({center.width - 132.f, center.height + 32.f});
+        auto squareWidth = cac_this->_currentColorSpr()->getScaledContentSize().width;
+        auto x = widget->getPositionX() - squareWidth / 2.f;
+        cac_this->_currentColorSpr()->setPosition({x, center.height + 85.f});
+        cac_this->_prevColorSpr()->setPosition({x + squareWidth, center.height + 85.f});
+
+        layer->addChild(widget);
+        widget->setVisible(cac_this->_pulseMode() == 0);
+
+        return true;
+    }
+
+    void onSelectPulseMode(CCObject *p0) override {
+        // std::cout << "SetupPulsePopup::onSelectPulseMode\n";
+        $SetupPulsePopup::onSelectPulseMode(p0);
+        if (colorInputWidget) colorInputWidget->setVisible(cac_this->_pulseMode() == 0);
+    }
+
+    void colorValueChanged() override {
+        // std::cout << "SetupPulsePopup::colorValueChanged\n";
+        $SetupPulsePopup::colorValueChanged();
+        if (colorInputWidget) colorInputWidget->updateLabels(true, true);
+    }
+
+    void dtor() override {
+        // std::cout << "SetupPulsePopup::~ColorSelectPopup\n";
+        colorInputWidget = nullptr;
+        $SetupPulsePopup::dtor();
+    }
+} PulseSelectHook;
+END_CAC_HOOKS
