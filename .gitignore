@@ -30,5 +30,8 @@
 *.out
 *.app
 
+# Ignore build folder
+build
+
+# Macos be like
 **/.DS_Store
-dist/
